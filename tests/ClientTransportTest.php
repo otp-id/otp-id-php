@@ -125,6 +125,25 @@ final class ClientTransportTest extends TestCase
         }
     }
 
+    public function testDoRequestApiErrorWithIncompleteErrorObjectYieldsEmptyCodeAndMessage(): void
+    {
+        // Mirrors Go: json.Unmarshal zero-values missing struct fields
+        // instead of failing, so {"success":false,"error":{}} still yields
+        // an APIError (with empty code/message), not INVALID_RESPONSE.
+        $transport = new FakeTransport(500, '{"success":false,"data":null,"error":{}}');
+        $client = new Client('test-key', ['transport' => $transport]);
+
+        try {
+            $this->callDoRequest($client, 'GET', '/v3/account', null, false);
+            self::fail('expected ApiException');
+        } catch (ApiException $exception) {
+            self::assertSame('', $exception->getErrorCode());
+            self::assertNotSame(ErrorCode::INVALID_RESPONSE, $exception->getErrorCode());
+            self::assertSame(500, $exception->getHttpStatus());
+            self::assertNull($exception->getDetails());
+        }
+    }
+
     public function testDoRequestSuccessTrueWithNullDataAndExpectDataIsInvalidResponse(): void
     {
         $transport = new FakeTransport(200, '{"success":true,"data":null,"error":null}');

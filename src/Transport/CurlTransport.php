@@ -35,7 +35,7 @@ final class CurlTransport implements TransportInterface
             CURLOPT_URL => $url,
             CURLOPT_CUSTOMREQUEST => $method,
             CURLOPT_HTTPHEADER => $headerLines,
-            CURLOPT_TIMEOUT => (int) $this->timeout,
+            CURLOPT_TIMEOUT_MS => (int) round($this->timeout * 1000),
             CURLOPT_FOLLOWLOCATION => false,
             CURLOPT_WRITEFUNCTION => static function (mixed $ch, string $data) use (&$buffer): int {
                 $length = \strlen($data);

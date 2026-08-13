@@ -85,20 +85,24 @@ final class Client
 
         if ($decoded['success'] === false) {
             $error = $decoded['error'] ?? null;
-            if (
-                !\is_array($error)
-                || !isset($error['code'], $error['message'])
-                || !\is_string($error['code'])
-                || !\is_string($error['message'])
-            ) {
+            if (!\is_array($error)) {
+                // Mirrors Go: a missing/null "error" leaves env.Error nil,
+                // which is the SDK's own INVALID_RESPONSE case.
                 throw $invalid();
             }
+
+            // Mirrors Go: json.Unmarshal zero-values any field missing from
+            // the "error" object instead of failing, so an incomplete
+            // object (e.g. {}) still yields an APIError with empty
+            // code/message rather than collapsing to INVALID_RESPONSE.
+            $code = \is_string($error['code'] ?? null) ? $error['code'] : '';
+            $message = \is_string($error['message'] ?? null) ? $error['message'] : '';
 
             $details = $error['details'] ?? null;
             /** @var array<string, mixed>|null $details */
             $details = \is_array($details) ? $details : null;
 
-            throw new ApiException($error['code'], $error['message'], $status, $details);
+            throw new ApiException($code, $message, $status, $details);
         }
 
         $data = $decoded['data'] ?? null;
@@ -120,8 +124,8 @@ final class Client
     private static function bodySnippet(string $raw): string
     {
         $trimmed = trim($raw);
-        if (mb_strlen($trimmed) > self::SNIPPET_MAX_LENGTH) {
-            return mb_substr($trimmed, 0, self::SNIPPET_MAX_LENGTH);
+        if (mb_strlen($trimmed, 'UTF-8') > self::SNIPPET_MAX_LENGTH) {
+            return mb_substr($trimmed, 0, self::SNIPPET_MAX_LENGTH, 'UTF-8');
         }
 
         return $trimmed;
