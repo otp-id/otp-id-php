@@ -73,9 +73,15 @@ try {
             break;
     }
 } catch (\OtpId\Exception\OtpIdException $e) {
-    // network error, or SDK-side validation (empty API key / empty otp_id)
+    // ApiException (see above) or ConnectionException — a network-layer
+    // failure (DNS, connection refused, TLS, timeout).
 }
 ```
+
+Invalid SDK usage — an empty API key or an empty `otp_id` passed to
+`verifyOtp()`/`otpStatus()` — throws a plain `\InvalidArgumentException`,
+not `OtpIdException`. Treat it as a programming error to fix in your code,
+not something to catch at runtime.
 
 A wrong code on `verifyOtp()` is **not** an error: the server answers HTTP
 200 with `verified: false`, and the SDK returns a `VerifyResult` with
