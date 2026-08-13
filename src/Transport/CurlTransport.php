@@ -36,6 +36,9 @@ final class CurlTransport implements TransportInterface
             CURLOPT_CUSTOMREQUEST => $method,
             CURLOPT_HTTPHEADER => $headerLines,
             CURLOPT_TIMEOUT_MS => (int) round($this->timeout * 1000),
+            // Deliberate deviation from the Go SDK: PHP's curl forwards the
+            // Authorization header on redirects, so redirects are not
+            // followed here to avoid leaking the Bearer token cross-origin.
             CURLOPT_FOLLOWLOCATION => false,
             CURLOPT_WRITEFUNCTION => static function (mixed $ch, string $data) use (&$buffer): int {
                 $length = \strlen($data);
@@ -60,13 +63,11 @@ final class CurlTransport implements TransportInterface
 
         if (curl_errno($handle) !== 0) {
             $message = curl_error($handle);
-            curl_close($handle);
 
             throw new ConnectionException(sprintf('otpid: %s %s: %s', $method, $url, $message));
         }
 
         $status = (int) curl_getinfo($handle, CURLINFO_HTTP_CODE);
-        curl_close($handle);
 
         return [$status, $buffer];
     }
