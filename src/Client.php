@@ -54,7 +54,7 @@ final class Client
      * Creates an OTP transaction with a server-generated code
      * (POST /v3/request). The code itself is never returned.
      *
-     * @param array{channel?: mixed, destination?: ?string, brand?: ?string, otp_length?: ?int, ttl?: ?int, external_id?: ?string} $params keys are the wire names; channel is required, the rest are optional and dropped when null or ''
+     * @param array{channel?: mixed, destination?: ?string, brand?: ?string, otp_length?: ?int, ttl?: ?int, external_id?: ?string} $params keys are the wire names; channel is required, the rest are optional and dropped when null or ''. Any key outside this whitelist throws InvalidArgumentException — this catches typos like the old SDK's camelCase externalId silently vanishing instead of being sent.
      */
     public function requestOtp(array $params): OrderResult
     {
@@ -132,7 +132,11 @@ final class Client
     /**
      * Builds the requestOtp()/sendOtp() wire body from the array options.
      * Null and empty-string values are dropped — the PHP equivalent of
-     * Go's `omitempty` struct tags. 0 is kept.
+     * Go's `omitempty` struct tags. 0 is kept. Any key that is not
+     * "channel" or one of ORDER_OPTIONAL_KEYS throws InvalidArgumentException
+     * rather than being silently dropped — a mistyped or stale (e.g.
+     * pre-0.2.0 camelCase) key must fail loudly instead of quietly losing
+     * data such as the idempotency key.
      *
      * @param array{channel?: mixed, destination?: ?string, brand?: ?string, otp_length?: ?int, ttl?: ?int, external_id?: ?string} $params
      *
@@ -142,7 +146,17 @@ final class Client
     {
         $channel = $params['channel'] ?? null;
         if (!\is_string($channel) || $channel === '') {
-            throw new \InvalidArgumentException('otpid: channel is required');
+            throw new \InvalidArgumentException('otpid: channel must be a non-empty string');
+        }
+
+        $validKeys = array_merge(['channel'], self::ORDER_OPTIONAL_KEYS);
+        $unknownKeys = array_diff(array_keys($params), $validKeys);
+        if ($unknownKeys !== []) {
+            throw new \InvalidArgumentException(sprintf(
+                'otpid: unrecognized option key(s): %s (valid keys: %s)',
+                implode(', ', $unknownKeys),
+                implode(', ', $validKeys)
+            ));
         }
 
         $wire = ['channel' => $channel];

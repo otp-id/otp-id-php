@@ -155,6 +155,73 @@ final class EndpointsTest extends TestCase
         }
     }
 
+    public function testRequestOtpMissingChannelThrowsWithoutNetworkCall(): void
+    {
+        $transport = new FakeTransport();
+        $client = new Client('test-key', ['transport' => $transport]);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        try {
+            $client->requestOtp(['destination' => '6281234567890']);
+        } finally {
+            self::assertSame(0, $transport->callCount);
+        }
+    }
+
+    public function testRequestOtpEmptyStringChannelThrowsWithoutNetworkCall(): void
+    {
+        $transport = new FakeTransport();
+        $client = new Client('test-key', ['transport' => $transport]);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        try {
+            $client->requestOtp(['channel' => '', 'destination' => '6281234567890']);
+        } finally {
+            self::assertSame(0, $transport->callCount);
+        }
+    }
+
+    public function testRequestOtpNonStringChannelThrowsWithoutNetworkCall(): void
+    {
+        $transport = new FakeTransport();
+        $client = new Client('test-key', ['transport' => $transport]);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        try {
+            // 'channel' is typed as mixed in the array shape precisely so
+            // this kind of caller mistake is a runtime check, not a static
+            // one — an int is accepted by the type system but rejected here.
+            $client->requestOtp(['channel' => 123, 'destination' => '6281234567890']);
+        } finally {
+            self::assertSame(0, $transport->callCount);
+        }
+    }
+
+    public function testRequestOtpUnknownOptionKeyThrowsWithoutNetworkCall(): void
+    {
+        // Guards a 0.1.0 -> 0.2.0 migrator who kept the old camelCase key:
+        // ['externalId' => '...'] must fail loudly, not silently vanish and
+        // let a retry deliver a second OTP.
+        $transport = new FakeTransport();
+        $client = new Client('test-key', ['transport' => $transport]);
+
+        try {
+            $client->requestOtp([
+                'channel' => Channel::WHATSAPP,
+                'destination' => '6281234567890',
+                'externalId' => 'order-8821',
+            ]);
+            self::fail('expected InvalidArgumentException');
+        } catch (\InvalidArgumentException $exception) {
+            self::assertStringContainsString('externalId', $exception->getMessage());
+        }
+
+        self::assertSame(0, $transport->callCount);
+    }
+
     // --- verifyOtp (verify.go) -----------------------------------------
 
     public function testVerifyOtpSuccess(): void

@@ -187,7 +187,7 @@ $client = new Client($apiKey, [
 ```
 
 The SDK never retries a request. If you add retries, only retry
-`requestOtp()`/`sendOtp()` calls that carry an `externalId` (the server
+`requestOtp()`/`sendOtp()` calls that carry an `external_id` (the server
 replays them idempotently) — retrying without one may deliver a second
 OTP.
 
