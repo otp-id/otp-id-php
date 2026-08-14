@@ -12,21 +12,49 @@ use OtpId\Internal\Scalars;
  */
 final class TopupResult
 {
-    /**
-     * @param int $paymentTotal amount + admin fee; display as-is
-     */
+    public string $topupId;
+
+    public string $paymentUrl;
+
+    public string $paymentHash;
+
+    public int $amount;
+
+    /** @var int amount + admin fee; display as-is */
+    public int $paymentTotal;
+
+    public int $paymentMethodId;
+
+    public string $paymentMethod;
+
+    public string $paymentType;
+
+    public string $paymentExpiredAt;
+
+    public string $status;
+
     public function __construct(
-        public readonly string $topupId,
-        public readonly string $paymentUrl,
-        public readonly string $paymentHash,
-        public readonly int $amount,
-        public readonly int $paymentTotal,
-        public readonly int $paymentMethodId,
-        public readonly string $paymentMethod,
-        public readonly string $paymentType,
-        public readonly string $paymentExpiredAt,
-        public readonly string $status,
+        string $topupId,
+        string $paymentUrl,
+        string $paymentHash,
+        int $amount,
+        int $paymentTotal,
+        int $paymentMethodId,
+        string $paymentMethod,
+        string $paymentType,
+        string $paymentExpiredAt,
+        string $status
     ) {
+        $this->topupId = $topupId;
+        $this->paymentUrl = $paymentUrl;
+        $this->paymentHash = $paymentHash;
+        $this->amount = $amount;
+        $this->paymentTotal = $paymentTotal;
+        $this->paymentMethodId = $paymentMethodId;
+        $this->paymentMethod = $paymentMethod;
+        $this->paymentType = $paymentType;
+        $this->paymentExpiredAt = $paymentExpiredAt;
+        $this->status = $status;
     }
 
     /**
@@ -35,16 +63,16 @@ final class TopupResult
     public static function fromArray(array $data): self
     {
         return new self(
-            topupId: Scalars::str($data, 'topup_id'),
-            paymentUrl: Scalars::str($data, 'payment_url'),
-            paymentHash: Scalars::str($data, 'payment_hash'),
-            amount: Scalars::int($data, 'amount'),
-            paymentTotal: Scalars::int($data, 'payment_total'),
-            paymentMethodId: Scalars::int($data, 'payment_method_id'),
-            paymentMethod: Scalars::str($data, 'payment_method'),
-            paymentType: Scalars::str($data, 'payment_type'),
-            paymentExpiredAt: Scalars::str($data, 'payment_expired_at'),
-            status: Scalars::str($data, 'status'),
+            Scalars::str($data, 'topup_id'),
+            Scalars::str($data, 'payment_url'),
+            Scalars::str($data, 'payment_hash'),
+            Scalars::int($data, 'amount'),
+            Scalars::int($data, 'payment_total'),
+            Scalars::int($data, 'payment_method_id'),
+            Scalars::str($data, 'payment_method'),
+            Scalars::str($data, 'payment_type'),
+            Scalars::str($data, 'payment_expired_at'),
+            Scalars::str($data, 'status')
         );
     }
 }

@@ -4,6 +4,21 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.0] - 2026-08-14
+
+### Changed
+
+- PHP floor lowered from 8.1 to 7.4 for wider hosting compatibility
+  (Indonesian shared hosting still commonly runs 7.4).
+
+### Breaking
+
+- `OrderParams` class removed in favor of array options on
+  `requestOtp()`/`sendOtp()` — pass the wire keys directly, e.g.
+  `$client->requestOtp(['channel' => Channel::WHATSAPP, 'destination' => '...'])`.
+- `Channel` enum replaced by a constants class (usage: `Channel::WHATSAPP`
+  instead of `Channel::WhatsApp`).
+
 ## [0.1.0] - 2026-08-14
 
 ### Added

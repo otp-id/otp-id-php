@@ -11,14 +11,18 @@ use OtpId\Internal\Scalars;
  */
 final class VerifyResult
 {
-    /**
-     * @param string $reason "" when $verified is true, "mismatch" when the code was wrong. A mismatch is HTTP 200 and therefore NOT an exception from verifyOtp(). Expired / locked / already-used transactions come back as ApiException (OTP_EXPIRED, TOO_MANY_ATTEMPTS, ALREADY_USED) instead.
-     */
-    public function __construct(
-        public readonly string $otpId,
-        public readonly bool $verified,
-        public readonly string $reason,
-    ) {
+    public string $otpId;
+
+    public bool $verified;
+
+    /** @var string "" when $verified is true, "mismatch" when the code was wrong. A mismatch is HTTP 200 and therefore NOT an exception from verifyOtp(). Expired / locked / already-used transactions come back as ApiException (OTP_EXPIRED, TOO_MANY_ATTEMPTS, ALREADY_USED) instead. */
+    public string $reason;
+
+    public function __construct(string $otpId, bool $verified, string $reason)
+    {
+        $this->otpId = $otpId;
+        $this->verified = $verified;
+        $this->reason = $reason;
     }
 
     /**
@@ -27,9 +31,9 @@ final class VerifyResult
     public static function fromArray(array $data): self
     {
         return new self(
-            otpId: Scalars::str($data, 'otp_id'),
-            verified: Scalars::bool($data, 'verified'),
-            reason: Scalars::str($data, 'reason'),
+            Scalars::str($data, 'otp_id'),
+            Scalars::bool($data, 'verified'),
+            Scalars::str($data, 'reason')
         );
     }
 }

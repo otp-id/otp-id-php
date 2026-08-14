@@ -14,8 +14,11 @@ final class CurlTransport implements TransportInterface
     /** Guard against abnormal responses — matches the Go SDK's maxBodyBytes. */
     private const MAX_BODY_BYTES = 1_048_576;
 
-    public function __construct(private readonly float $timeout = 30.0)
+    private float $timeout;
+
+    public function __construct(float $timeout = 30.0)
     {
+        $this->timeout = $timeout;
     }
 
     public function request(string $method, string $url, array $headers, ?string $body): array
@@ -40,7 +43,9 @@ final class CurlTransport implements TransportInterface
             // Authorization header on redirects, so redirects are not
             // followed here to avoid leaking the Bearer token cross-origin.
             CURLOPT_FOLLOWLOCATION => false,
-            CURLOPT_WRITEFUNCTION => static function (mixed $ch, string $data) use (&$buffer): int {
+            // $ch (the curl handle/resource) is unused and left untyped —
+            // PHP 7.4 has no `mixed` type hint.
+            CURLOPT_WRITEFUNCTION => static function ($ch, string $data) use (&$buffer): int {
                 $length = \strlen($data);
                 $remaining = self::MAX_BODY_BYTES - \strlen($buffer);
                 if ($remaining > 0) {

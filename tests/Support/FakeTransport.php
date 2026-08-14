@@ -23,10 +23,14 @@ final class FakeTransport implements TransportInterface
 
     public int $callCount = 0;
 
-    public function __construct(
-        private readonly int $responseStatus = 200,
-        private readonly string $responseBody = '{"success":true,"data":{},"error":null}',
-    ) {
+    private int $responseStatus;
+
+    private string $responseBody;
+
+    public function __construct(int $responseStatus = 200, string $responseBody = '{"success":true,"data":{},"error":null}')
+    {
+        $this->responseStatus = $responseStatus;
+        $this->responseBody = $responseBody;
     }
 
     public function request(string $method, string $url, array $headers, ?string $body): array
