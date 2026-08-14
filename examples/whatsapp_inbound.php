@@ -23,7 +23,6 @@ require __DIR__ . '/../vendor/autoload.php';
 use OtpId\Channel;
 use OtpId\Client;
 use OtpId\Exception\OtpIdException;
-use OtpId\OrderParams;
 
 const POLL_INTERVAL_SECONDS = 3;
 const POLL_TIMEOUT_SECONDS = 5 * 60;
@@ -37,11 +36,11 @@ if ($apiKey === false || $apiKey === '') {
 $client = new Client($apiKey);
 
 try {
-    $res = $client->requestOtp(new OrderParams(
-        channel: Channel::WhatsAppInbound,
-        brand: 'MyApp',
-        ttl: 300,
-    ));
+    $res = $client->requestOtp([
+        'channel' => Channel::WHATSAPP_INBOUND,
+        'brand' => 'MyApp',
+        'ttl' => 300,
+    ]);
 } catch (OtpIdException $e) {
     fatalApi($e);
 }
@@ -80,7 +79,7 @@ while (time() < $deadline) {
 
 echo "timed out — the user never sent the message\n";
 
-function fatalApi(OtpIdException $e): never
+function fatalApi(OtpIdException $e): void
 {
     fwrite(STDERR, "error: {$e->getMessage()}\n");
     exit(1);

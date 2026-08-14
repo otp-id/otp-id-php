@@ -7,12 +7,17 @@ namespace OtpId;
 /**
  * OTP delivery channel accepted by the V3 API.
  */
-enum Channel: string
+final class Channel
 {
-    case WhatsApp = 'whatsapp';
-    case Sms = 'sms';
-    case Voice = 'voice';
-    case Email = 'email';
-    case Misscall = 'misscall';
-    case WhatsAppInbound = 'whatsapp_inbound';
+    public const WHATSAPP = 'whatsapp';
+    public const SMS = 'sms';
+    public const VOICE = 'voice';
+    public const EMAIL = 'email';
+    public const MISSCALL = 'misscall';
+    public const WHATSAPP_INBOUND = 'whatsapp_inbound';
+
+    private function __construct()
+    {
+        // Static constant holder — not instantiable.
+    }
 }

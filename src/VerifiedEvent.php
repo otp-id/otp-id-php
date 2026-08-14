@@ -12,20 +12,36 @@ use OtpId\Internal\Scalars;
  */
 final class VerifiedEvent
 {
-    /**
-     * @param string $event      always "otp.verified"
-     * @param string $externalId "" when the merchant sent no external_id
-     * @param string $channel    delivery channel value, e.g. "whatsapp"
-     * @param string $verifiedAt "YYYY-MM-DD HH:MM:SS" in WIB (UTC+7)
-     */
+    /** @var string always "otp.verified" */
+    public string $event;
+
+    public string $otpId;
+
+    /** @var string "" when the merchant sent no external_id */
+    public string $externalId;
+
+    /** @var string delivery channel value, e.g. "whatsapp" */
+    public string $channel;
+
+    public string $number;
+
+    /** @var string "YYYY-MM-DD HH:MM:SS" in WIB (UTC+7) */
+    public string $verifiedAt;
+
     public function __construct(
-        public readonly string $event,
-        public readonly string $otpId,
-        public readonly string $externalId,
-        public readonly string $channel,
-        public readonly string $number,
-        public readonly string $verifiedAt,
+        string $event,
+        string $otpId,
+        string $externalId,
+        string $channel,
+        string $number,
+        string $verifiedAt
     ) {
+        $this->event = $event;
+        $this->otpId = $otpId;
+        $this->externalId = $externalId;
+        $this->channel = $channel;
+        $this->number = $number;
+        $this->verifiedAt = $verifiedAt;
     }
 
     /**
@@ -34,12 +50,12 @@ final class VerifiedEvent
     public static function fromArray(array $data): self
     {
         return new self(
-            event: Scalars::str($data, 'event'),
-            otpId: Scalars::str($data, 'otp_id'),
-            externalId: Scalars::str($data, 'external_id'),
-            channel: Scalars::str($data, 'channel'),
-            number: Scalars::str($data, 'number'),
-            verifiedAt: Scalars::str($data, 'verified_at'),
+            Scalars::str($data, 'event'),
+            Scalars::str($data, 'otp_id'),
+            Scalars::str($data, 'external_id'),
+            Scalars::str($data, 'channel'),
+            Scalars::str($data, 'number'),
+            Scalars::str($data, 'verified_at')
         );
     }
 }

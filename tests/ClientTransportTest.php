@@ -24,6 +24,13 @@ final class ClientTransportTest extends TestCase
     private function callDoRequest(Client $client, string $method, string $path, ?array $body = null, bool $expectData = true): array
     {
         $reflectionMethod = new \ReflectionMethod($client, 'doRequest');
+        // setAccessible() is required to invoke a private method via
+        // Reflection on PHP 7.4/8.0. PHP 8.1+ made private methods
+        // reflection-invokable by default and PHP 8.5 deprecates calling
+        // setAccessible() at all, so only call it where it is still needed.
+        if (\PHP_VERSION_ID < 80100) {
+            $reflectionMethod->setAccessible(true);
+        }
 
         /** @var array<string, mixed> $result */
         $result = $reflectionMethod->invoke($client, $method, $path, $body, $expectData);

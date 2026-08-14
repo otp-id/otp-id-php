@@ -15,7 +15,7 @@ use OtpId\Transport\TransportInterface;
 final class Client
 {
     /** Sent in the User-Agent header. */
-    public const VERSION = '0.1.0';
+    public const VERSION = '0.2.0';
 
     private const DEFAULT_BASE_URL = 'https://api.otp.id';
 
@@ -24,11 +24,14 @@ final class Client
     /** First ~200 characters of a non-decodable body, for diagnostics. */
     private const SNIPPET_MAX_LENGTH = 200;
 
-    private readonly string $apiKey;
+    /** Optional keys accepted by requestOtp()/sendOtp(), mapped to their wire names (identity — kept for readability at the call site). */
+    private const ORDER_OPTIONAL_KEYS = ['destination', 'brand', 'otp_length', 'ttl', 'external_id'];
 
-    private readonly string $baseUrl;
+    private string $apiKey;
 
-    private readonly TransportInterface $transport;
+    private string $baseUrl;
+
+    private TransportInterface $transport;
 
     /**
      * @param array{base_url?: string, timeout?: float, transport?: TransportInterface} $options
@@ -50,20 +53,24 @@ final class Client
     /**
      * Creates an OTP transaction with a server-generated code
      * (POST /v3/request). The code itself is never returned.
+     *
+     * @param array{channel?: mixed, destination?: ?string, brand?: ?string, otp_length?: ?int, ttl?: ?int, external_id?: ?string} $params keys are the wire names; channel is required, the rest are optional and dropped when null or ''
      */
-    public function requestOtp(OrderParams $params): OrderResult
+    public function requestOtp(array $params): OrderResult
     {
-        return OrderResult::fromArray($this->doRequest('POST', '/v3/request', $params->toArray(), true));
+        return OrderResult::fromArray($this->doRequest('POST', '/v3/request', $this->buildOrderBody($params), true));
     }
 
     /**
      * Delivers a client-generated code (POST /v3/send). The server rejects
-     * Channel::Voice and Channel::WhatsAppInbound for this endpoint; use
-     * Channel::WhatsApp, Channel::Sms, or Channel::Email.
+     * Channel::VOICE and Channel::WHATSAPP_INBOUND for this endpoint; use
+     * Channel::WHATSAPP, Channel::SMS, or Channel::EMAIL.
+     *
+     * @param array{channel?: mixed, destination?: ?string, brand?: ?string, otp_length?: ?int, ttl?: ?int, external_id?: ?string} $params same shape as requestOtp()
      */
-    public function sendOtp(string $otp, OrderParams $params): OrderResult
+    public function sendOtp(string $otp, array $params): OrderResult
     {
-        $body = $params->toArray();
+        $body = $this->buildOrderBody($params);
         $body['otp'] = $otp;
 
         return OrderResult::fromArray($this->doRequest('POST', '/v3/send', $body, true));
@@ -120,6 +127,40 @@ final class Client
             'amount' => $amount,
             'payment_method_id' => $paymentMethodId,
         ], true));
+    }
+
+    /**
+     * Builds the requestOtp()/sendOtp() wire body from the array options.
+     * Null and empty-string values are dropped — the PHP equivalent of
+     * Go's `omitempty` struct tags. 0 is kept.
+     *
+     * @param array{channel?: mixed, destination?: ?string, brand?: ?string, otp_length?: ?int, ttl?: ?int, external_id?: ?string} $params
+     *
+     * @return array<string, mixed>
+     */
+    private function buildOrderBody(array $params): array
+    {
+        $channel = $params['channel'] ?? null;
+        if (!\is_string($channel) || $channel === '') {
+            throw new \InvalidArgumentException('otpid: channel is required');
+        }
+
+        $wire = ['channel' => $channel];
+
+        foreach (self::ORDER_OPTIONAL_KEYS as $key) {
+            if (!\array_key_exists($key, $params)) {
+                continue;
+            }
+
+            $value = $params[$key];
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            $wire[$key] = $value;
+        }
+
+        return $wire;
     }
 
     /**

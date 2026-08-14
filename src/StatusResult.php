@@ -11,22 +11,47 @@ use OtpId\Internal\Scalars;
  */
 final class StatusResult
 {
-    /**
-     * @param string $status sent | success | failed | pending | verified
-     * @param string $verifiedAt "" until verified
-     * @param ?Verification $verification only present for not-yet-verified misscall transactions (prefix field), so polling clients can build their UI
-     */
+    public string $otpId;
+
+    /** @var string sent | success | failed | pending | verified */
+    public string $status;
+
+    public string $channel;
+
+    public string $number;
+
+    public int $attempts;
+
+    public string $expiresAt;
+
+    /** @var string "" until verified */
+    public string $verifiedAt;
+
+    public int $price;
+
+    /** @var ?Verification only present for not-yet-verified misscall transactions (prefix field), so polling clients can build their UI */
+    public ?Verification $verification;
+
     public function __construct(
-        public readonly string $otpId,
-        public readonly string $status,
-        public readonly string $channel,
-        public readonly string $number,
-        public readonly int $attempts,
-        public readonly string $expiresAt,
-        public readonly string $verifiedAt,
-        public readonly int $price,
-        public readonly ?Verification $verification,
+        string $otpId,
+        string $status,
+        string $channel,
+        string $number,
+        int $attempts,
+        string $expiresAt,
+        string $verifiedAt,
+        int $price,
+        ?Verification $verification
     ) {
+        $this->otpId = $otpId;
+        $this->status = $status;
+        $this->channel = $channel;
+        $this->number = $number;
+        $this->attempts = $attempts;
+        $this->expiresAt = $expiresAt;
+        $this->verifiedAt = $verifiedAt;
+        $this->price = $price;
+        $this->verification = $verification;
     }
 
     /**
@@ -37,15 +62,15 @@ final class StatusResult
         $verification = $data['verification'] ?? null;
 
         return new self(
-            otpId: Scalars::str($data, 'otp_id'),
-            status: Scalars::str($data, 'status'),
-            channel: Scalars::str($data, 'channel'),
-            number: Scalars::str($data, 'number'),
-            attempts: Scalars::int($data, 'attempts'),
-            expiresAt: Scalars::str($data, 'expires_at'),
-            verifiedAt: Scalars::str($data, 'verified_at'),
-            price: Scalars::int($data, 'price'),
-            verification: \is_array($verification) ? Verification::fromArray($verification) : null,
+            Scalars::str($data, 'otp_id'),
+            Scalars::str($data, 'status'),
+            Scalars::str($data, 'channel'),
+            Scalars::str($data, 'number'),
+            Scalars::int($data, 'attempts'),
+            Scalars::str($data, 'expires_at'),
+            Scalars::str($data, 'verified_at'),
+            Scalars::int($data, 'price'),
+            \is_array($verification) ? Verification::fromArray($verification) : null
         );
     }
 }

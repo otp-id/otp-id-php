@@ -12,17 +12,33 @@ use OtpId\Internal\Scalars;
  */
 final class AccountResult
 {
-    /**
-     * @param int $saldo current credit balance
-     */
+    public string $merchantId;
+
+    public string $name;
+
+    public string $brandName;
+
+    public string $brandEmail;
+
+    public string $email;
+
+    /** @var int current credit balance */
+    public int $saldo;
+
     public function __construct(
-        public readonly string $merchantId,
-        public readonly string $name,
-        public readonly string $brandName,
-        public readonly string $brandEmail,
-        public readonly string $email,
-        public readonly int $saldo,
+        string $merchantId,
+        string $name,
+        string $brandName,
+        string $brandEmail,
+        string $email,
+        int $saldo
     ) {
+        $this->merchantId = $merchantId;
+        $this->name = $name;
+        $this->brandName = $brandName;
+        $this->brandEmail = $brandEmail;
+        $this->email = $email;
+        $this->saldo = $saldo;
     }
 
     /**
@@ -31,12 +47,12 @@ final class AccountResult
     public static function fromArray(array $data): self
     {
         return new self(
-            merchantId: Scalars::str($data, 'merchant_id'),
-            name: Scalars::str($data, 'name'),
-            brandName: Scalars::str($data, 'brand_name'),
-            brandEmail: Scalars::str($data, 'brand_email'),
-            email: Scalars::str($data, 'email'),
-            saldo: Scalars::int($data, 'saldo'),
+            Scalars::str($data, 'merchant_id'),
+            Scalars::str($data, 'name'),
+            Scalars::str($data, 'brand_name'),
+            Scalars::str($data, 'brand_email'),
+            Scalars::str($data, 'email'),
+            Scalars::int($data, 'saldo')
         );
     }
 }

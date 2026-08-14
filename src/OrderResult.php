@@ -12,21 +12,43 @@ use OtpId\Internal\Scalars;
  */
 final class OrderResult
 {
-    /**
-     * @param string $status pending | sent | success | failed
-     * @param string $expiresAt "YYYY-MM-DD HH:MM:SS" in WIB (UTC+7); kept as a string, the SDK does not parse server datetimes
-     * @param int $lastBalance remaining credit after this transaction; stays unchanged when delivery failed (status "failed") or on an idempotency replay
-     */
+    public string $otpId;
+
+    /** @var string pending | sent | success | failed */
+    public string $status;
+
+    public string $channel;
+
+    public string $number;
+
+    public int $price;
+
+    /** @var int remaining credit after this transaction; stays unchanged when delivery failed (status "failed") or on an idempotency replay */
+    public int $lastBalance;
+
+    /** @var string "YYYY-MM-DD HH:MM:SS" in WIB (UTC+7); kept as a string, the SDK does not parse server datetimes */
+    public string $expiresAt;
+
+    public ?Verification $verification;
+
     public function __construct(
-        public readonly string $otpId,
-        public readonly string $status,
-        public readonly string $channel,
-        public readonly string $number,
-        public readonly int $price,
-        public readonly int $lastBalance,
-        public readonly string $expiresAt,
-        public readonly ?Verification $verification,
+        string $otpId,
+        string $status,
+        string $channel,
+        string $number,
+        int $price,
+        int $lastBalance,
+        string $expiresAt,
+        ?Verification $verification
     ) {
+        $this->otpId = $otpId;
+        $this->status = $status;
+        $this->channel = $channel;
+        $this->number = $number;
+        $this->price = $price;
+        $this->lastBalance = $lastBalance;
+        $this->expiresAt = $expiresAt;
+        $this->verification = $verification;
     }
 
     /**
@@ -37,14 +59,14 @@ final class OrderResult
         $verification = $data['verification'] ?? null;
 
         return new self(
-            otpId: Scalars::str($data, 'otp_id'),
-            status: Scalars::str($data, 'status'),
-            channel: Scalars::str($data, 'channel'),
-            number: Scalars::str($data, 'number'),
-            price: Scalars::int($data, 'price'),
-            lastBalance: Scalars::int($data, 'last_balance'),
-            expiresAt: Scalars::str($data, 'expires_at'),
-            verification: \is_array($verification) ? Verification::fromArray($verification) : null,
+            Scalars::str($data, 'otp_id'),
+            Scalars::str($data, 'status'),
+            Scalars::str($data, 'channel'),
+            Scalars::str($data, 'number'),
+            Scalars::int($data, 'price'),
+            Scalars::int($data, 'last_balance'),
+            Scalars::str($data, 'expires_at'),
+            \is_array($verification) ? Verification::fromArray($verification) : null
         );
     }
 }

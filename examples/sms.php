@@ -16,7 +16,6 @@ require __DIR__ . '/../vendor/autoload.php';
 use OtpId\Channel;
 use OtpId\Client;
 use OtpId\Exception\OtpIdException;
-use OtpId\OrderParams;
 
 $apiKey = getenv('OTPID_API_KEY');
 $dest = getenv('OTPID_DESTINATION');
@@ -28,12 +27,12 @@ if ($apiKey === false || $apiKey === '' || $dest === false || $dest === '') {
 $client = new Client($apiKey);
 
 try {
-    $res = $client->requestOtp(new OrderParams(
-        channel: Channel::Sms,
-        destination: $dest,
-        brand: 'MyApp',
-        ttl: 300,
-    ));
+    $res = $client->requestOtp([
+        'channel' => Channel::SMS,
+        'destination' => $dest,
+        'brand' => 'MyApp',
+        'ttl' => 300,
+    ]);
 } catch (OtpIdException $e) {
     fatalApi($e);
 }
@@ -61,7 +60,7 @@ if ($v->verified) {
     echo "wrong code: {$v->reason}\n";
 }
 
-function fatalApi(OtpIdException $e): never
+function fatalApi(OtpIdException $e): void
 {
     fwrite(STDERR, "error: {$e->getMessage()}\n");
     exit(1);

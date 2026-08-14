@@ -9,7 +9,6 @@ use OtpId\Exception\InvalidSignatureException;
 use OtpId\Exception\StaleTimestampException;
 use OtpId\Exception\UnexpectedEventException;
 use OtpId\Webhook;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -61,7 +60,9 @@ final class WebhookTest extends TestCase
         yield 'wrong signature' => [self::SECRET, self::TIMESTAMP, self::BODY, 'deadbeef'];
     }
 
-    #[DataProvider('rejectionCases')]
+    /**
+     * @dataProvider rejectionCases
+     */
     public function testVerifySignatureRejects(string $secret, string $timestamp, string $body, string $signature): void
     {
         self::assertFalse(Webhook::verifySignature($secret, $timestamp, $body, $signature));
@@ -144,7 +145,7 @@ final class WebhookTest extends TestCase
             Webhook::parseVerifiedEvent(self::SECRET, self::TIMESTAMP, $signature, $body);
             self::fail('expected an exception');
         } catch (InvalidSignatureException|StaleTimestampException|UnexpectedEventException $e) {
-            self::fail('expected an ApiException, got ' . $e::class);
+            self::fail('expected an ApiException, got ' . \get_class($e));
         } catch (ApiException $e) {
             self::assertSame('INVALID_RESPONSE', $e->getErrorCode());
             self::assertSame(0, $e->getHttpStatus());

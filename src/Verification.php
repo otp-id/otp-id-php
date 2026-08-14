@@ -15,14 +15,32 @@ use OtpId\Internal\Scalars;
  */
 final class Verification
 {
+    public string $waNumber;
+
+    public string $message;
+
+    public string $waLink;
+
+    public string $expiresAt;
+
+    public string $prefix;
+
+    public int $otpLength;
+
     public function __construct(
-        public readonly string $waNumber,
-        public readonly string $message,
-        public readonly string $waLink,
-        public readonly string $expiresAt,
-        public readonly string $prefix,
-        public readonly int $otpLength,
+        string $waNumber,
+        string $message,
+        string $waLink,
+        string $expiresAt,
+        string $prefix,
+        int $otpLength
     ) {
+        $this->waNumber = $waNumber;
+        $this->message = $message;
+        $this->waLink = $waLink;
+        $this->expiresAt = $expiresAt;
+        $this->prefix = $prefix;
+        $this->otpLength = $otpLength;
     }
 
     /**
@@ -31,12 +49,12 @@ final class Verification
     public static function fromArray(array $data): self
     {
         return new self(
-            waNumber: Scalars::str($data, 'wa_number'),
-            message: Scalars::str($data, 'message'),
-            waLink: Scalars::str($data, 'wa_link'),
-            expiresAt: Scalars::str($data, 'expires_at'),
-            prefix: Scalars::str($data, 'prefix'),
-            otpLength: Scalars::int($data, 'otp_length'),
+            Scalars::str($data, 'wa_number'),
+            Scalars::str($data, 'message'),
+            Scalars::str($data, 'wa_link'),
+            Scalars::str($data, 'expires_at'),
+            Scalars::str($data, 'prefix'),
+            Scalars::int($data, 'otp_length')
         );
     }
 }

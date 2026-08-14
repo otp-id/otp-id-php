@@ -4,15 +4,10 @@
          bootstrap="vendor/autoload.php"
          colors="true"
          failOnWarning="true"
-         failOnDeprecation="true">
+         convertDeprecationsToExceptions="true">
     <testsuites>
         <testsuite name="OtpId Test Suite">
             <directory>tests</directory>
         </testsuite>
     </testsuites>
-    <source>
-        <include>
-            <directory>src</directory>
-        </include>
-    </source>
 </phpunit>
