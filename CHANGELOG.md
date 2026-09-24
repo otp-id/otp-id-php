@@ -4,6 +4,20 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- `DeliveryFailure` (`code` + `message`) and `FailureCode` constants
+  (`NUMBER_NOT_ON_WHATSAPP`, `TOO_FREQUENT`, `CHANNEL_UNAVAILABLE`,
+  `PROVIDER_UNAVAILABLE`, `DELIVERY_FAILED`) — exposed as the nullable
+  `$failure` property on `OrderResult` and `StatusResult`, set only when
+  `$status === "failed"`. The raw vendor error is never exposed.
+- `StatusResult::$verification` (`otpStatus()` / `GET /v3/otp/{otp_id}`)
+  is now also populated for pending, not-yet-expired `whatsapp_inbound`
+  transactions (previously misscall only), so polling clients keep the
+  WhatsApp deep link across page reloads.
+
 ## [0.2.0] - 2026-08-14
 
 ### Changed

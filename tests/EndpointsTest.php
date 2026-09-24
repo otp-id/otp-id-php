@@ -8,6 +8,7 @@ use OtpId\Channel;
 use OtpId\Client;
 use OtpId\ErrorCode;
 use OtpId\Exception\ApiException;
+use OtpId\FailureCode;
 use OtpId\Tests\Support\FakeTransport;
 use PHPUnit\Framework\TestCase;
 
@@ -25,6 +26,12 @@ final class EndpointsTest extends TestCase
     private const ORDER_INBOUND_FIXTURE = '{"success":true,"data":{"otp_id":"OTP20260807ABCD000002","status":"pending","channel":"whatsapp_inbound","number":"","price":350,"last_balance":99300,"expires_at":"2026-08-07 10:05:00","verification":{"wa_number":"6285212345678","message":"OTPID V-8FK2QN9P — verifikasi MyApp. Kirim pesan ini tanpa mengubah isinya.","wa_link":"https://wa.me/6285212345678?text=OTPID%20V-8FK2QN9P","expires_at":"2026-08-07 10:05:00"}},"error":null}';
 
     private const ORDER_MISSCALL_FIXTURE = '{"success":true,"data":{"otp_id":"OTP20260807ABCD000003","status":"sent","channel":"misscall","number":"6281234567890","price":250,"last_balance":99050,"expires_at":"2026-08-07 10:05:00","verification":{"prefix":"628559263","otp_length":4}},"error":null}';
+
+    private const ORDER_FAILED_FIXTURE = '{"success":true,"data":{"otp_id":"OTP20260807ABCD000004","status":"failed","channel":"whatsapp","number":"6281234567890","price":350,"last_balance":99650,"expires_at":"2026-08-07 10:05:00","failure":{"code":"NUMBER_NOT_ON_WHATSAPP","message":"Nomor tujuan tidak terdaftar di WhatsApp"}},"error":null}';
+
+    private const STATUS_FAILED_FIXTURE = '{"success":true,"data":{"otp_id":"OTP20260807ABCD000004","status":"failed","channel":"whatsapp","number":"6281234567890","attempts":0,"expires_at":"2026-08-07 10:05:00","verified_at":"","price":350,"failure":{"code":"PROVIDER_UNAVAILABLE","message":"Operator pengiriman sedang gangguan, silakan coba lagi"}},"error":null}';
+
+    private const STATUS_INBOUND_PENDING_FIXTURE = '{"success":true,"data":{"otp_id":"OTP20260807ABCD000002","status":"pending","channel":"whatsapp_inbound","number":"","attempts":0,"expires_at":"2026-08-07 10:05:00","verified_at":"","price":350,"verification":{"wa_number":"6285212345678","message":"OTPID V-8FK2QN9P — verifikasi MyApp. Kirim pesan ini tanpa mengubah isinya.","wa_link":"https://wa.me/6285212345678?text=OTPID%20V-8FK2QN9P","expires_at":"2026-08-07 10:05:00"}},"error":null}';
 
     /**
      * @return array<string, mixed>
@@ -76,6 +83,7 @@ final class EndpointsTest extends TestCase
         self::assertSame(99650, $result->lastBalance);
         self::assertSame('2026-08-07 10:05:00', $result->expiresAt);
         self::assertNull($result->verification);
+        self::assertNull($result->failure);
     }
 
     public function testRequestOtpOmitsEmptyOptionalFields(): void
@@ -115,6 +123,19 @@ final class EndpointsTest extends TestCase
         self::assertNotNull($result->verification);
         self::assertSame('628559263', $result->verification->prefix);
         self::assertSame(4, $result->verification->otpLength);
+    }
+
+    public function testRequestOtpFailedIncludesFailureReason(): void
+    {
+        $transport = new FakeTransport(200, self::ORDER_FAILED_FIXTURE);
+        $client = new Client('test-key', ['transport' => $transport]);
+
+        $result = $client->requestOtp(['channel' => Channel::WHATSAPP, 'destination' => '6281234567890']);
+
+        self::assertSame('failed', $result->status);
+        self::assertNotNull($result->failure);
+        self::assertSame(FailureCode::NUMBER_NOT_ON_WHATSAPP, $result->failure->code);
+        self::assertSame('Nomor tujuan tidak terdaftar di WhatsApp', $result->failure->message);
     }
 
     public function testSendOtpBodyIncludesOtpAndReturnsResult(): void
@@ -308,6 +329,36 @@ final class EndpointsTest extends TestCase
         self::assertSame('', $result->verifiedAt);
         self::assertSame(350, $result->price);
         self::assertNull($result->verification);
+        self::assertNull($result->failure);
+    }
+
+    public function testOtpStatusFailedIncludesFailureReason(): void
+    {
+        $transport = new FakeTransport(200, self::STATUS_FAILED_FIXTURE);
+        $client = new Client('test-key', ['transport' => $transport]);
+
+        $result = $client->otpStatus('OTP20260807ABCD000004');
+
+        self::assertSame('failed', $result->status);
+        self::assertNotNull($result->failure);
+        self::assertSame(FailureCode::PROVIDER_UNAVAILABLE, $result->failure->code);
+        self::assertSame('Operator pengiriman sedang gangguan, silakan coba lagi', $result->failure->message);
+    }
+
+    public function testOtpStatusIncludesInboundVerificationWhilePending(): void
+    {
+        $transport = new FakeTransport(200, self::STATUS_INBOUND_PENDING_FIXTURE);
+        $client = new Client('test-key', ['transport' => $transport]);
+
+        $result = $client->otpStatus('OTP20260807ABCD000002');
+
+        self::assertSame('pending', $result->status);
+        self::assertNull($result->failure);
+        self::assertNotNull($result->verification);
+        self::assertSame('6285212345678', $result->verification->waNumber);
+        self::assertNotSame('', $result->verification->waLink);
+        self::assertNotSame('', $result->verification->message);
+        self::assertSame('2026-08-07 10:05:00', $result->verification->expiresAt);
     }
 
     public function testOtpStatusMisscallPrefix(): void
@@ -428,6 +479,25 @@ final class EndpointsTest extends TestCase
             self::fail('expected ApiException');
         } catch (ApiException $exception) {
             self::assertSame(ErrorCode::VALIDATION_ERROR, $exception->getErrorCode());
+        }
+    }
+
+    // --- FailureCode -----------------------------------------------------
+
+    public function testFailureCodeValues(): void
+    {
+        // Guards the constants against typos — values are the API contract.
+        // Kept in sync with otp-be's model/otp_request/failure.go constants.
+        $cases = [
+            FailureCode::NUMBER_NOT_ON_WHATSAPP => 'NUMBER_NOT_ON_WHATSAPP',
+            FailureCode::TOO_FREQUENT => 'TOO_FREQUENT',
+            FailureCode::CHANNEL_UNAVAILABLE => 'CHANNEL_UNAVAILABLE',
+            FailureCode::PROVIDER_UNAVAILABLE => 'PROVIDER_UNAVAILABLE',
+            FailureCode::DELIVERY_FAILED => 'DELIVERY_FAILED',
+        ];
+
+        foreach ($cases as $got => $want) {
+            self::assertSame($want, $got);
         }
     }
 }
