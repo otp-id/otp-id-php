@@ -31,6 +31,9 @@ final class OrderResult
 
     public ?Verification $verification;
 
+    /** @var ?DeliveryFailure present only when $status is "failed"; the public, classified delivery-failure reason (never the raw vendor error) */
+    public ?DeliveryFailure $failure;
+
     public function __construct(
         string $otpId,
         string $status,
@@ -39,7 +42,8 @@ final class OrderResult
         int $price,
         int $lastBalance,
         string $expiresAt,
-        ?Verification $verification
+        ?Verification $verification,
+        ?DeliveryFailure $failure = null
     ) {
         $this->otpId = $otpId;
         $this->status = $status;
@@ -49,6 +53,7 @@ final class OrderResult
         $this->lastBalance = $lastBalance;
         $this->expiresAt = $expiresAt;
         $this->verification = $verification;
+        $this->failure = $failure;
     }
 
     /**
@@ -57,6 +62,7 @@ final class OrderResult
     public static function fromArray(array $data): self
     {
         $verification = $data['verification'] ?? null;
+        $failure = $data['failure'] ?? null;
 
         return new self(
             Scalars::str($data, 'otp_id'),
@@ -66,7 +72,8 @@ final class OrderResult
             Scalars::int($data, 'price'),
             Scalars::int($data, 'last_balance'),
             Scalars::str($data, 'expires_at'),
-            \is_array($verification) ? Verification::fromArray($verification) : null
+            \is_array($verification) ? Verification::fromArray($verification) : null,
+            \is_array($failure) ? DeliveryFailure::fromArray($failure) : null
         );
     }
 }

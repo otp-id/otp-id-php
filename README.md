@@ -90,6 +90,30 @@ A wrong code on `verifyOtp()` is **not** an error: the server answers HTTP
 throw an `ApiException` (`OTP_EXPIRED`, `TOO_MANY_ATTEMPTS`,
 `ALREADY_USED`).
 
+### Delivery failures
+
+A transaction the vendor could not deliver is **not** an `ApiException`
+either — `requestOtp()`/`sendOtp()` return normally with `status: "failed"`
+and `$res->failure` set to a `DeliveryFailure` (`code` + a human-readable
+Indonesian `message`), never the raw vendor error. `otpStatus()` carries
+the same `$failure` when polling a transaction that later failed. `$failure`
+is `null` for every other status.
+
+```php
+use OtpId\FailureCode;
+
+$res = $client->requestOtp($params);
+if ($res->status === 'failed' && $res->failure !== null) {
+    if ($res->failure->code === FailureCode::NUMBER_NOT_ON_WHATSAPP) {
+        // ask for a different channel
+    }
+    echo $res->failure->message; // safe to show the merchant/user
+}
+```
+
+Codes are a stable, forward-compatible contract — treat any code you do
+not recognize as a generic failure rather than erroring out.
+
 ## Channels
 
 | Constant | Value | Notes |
@@ -121,6 +145,11 @@ polling `otpStatus()`.
 $res = $client->requestOtp(['channel' => Channel::WHATSAPP_INBOUND]);
 echo "Ask the user to tap: {$res->verification->waLink}\n";
 ```
+
+`otpStatus()` also carries `verification` (same `waNumber`/`message`/
+`waLink`/`expiresAt` fields) for as long as the transaction stays
+`pending` and has not expired — a page reload while polling does not lose
+the link.
 
 ### Missed Call
 

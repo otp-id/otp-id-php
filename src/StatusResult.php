@@ -29,8 +29,11 @@ final class StatusResult
 
     public int $price;
 
-    /** @var ?Verification only present for not-yet-verified misscall transactions (prefix field), so polling clients can build their UI */
+    /** @var ?Verification present for not-yet-verified misscall transactions (prefix field) and for pending, not-yet-expired whatsapp_inbound transactions (wa_number/message/wa_link/expires_at fields), so polling clients can build their UI */
     public ?Verification $verification;
+
+    /** @var ?DeliveryFailure present only when $status is "failed"; the public, classified delivery-failure reason (never the raw vendor error) */
+    public ?DeliveryFailure $failure;
 
     public function __construct(
         string $otpId,
@@ -41,7 +44,8 @@ final class StatusResult
         string $expiresAt,
         string $verifiedAt,
         int $price,
-        ?Verification $verification
+        ?Verification $verification,
+        ?DeliveryFailure $failure = null
     ) {
         $this->otpId = $otpId;
         $this->status = $status;
@@ -52,6 +56,7 @@ final class StatusResult
         $this->verifiedAt = $verifiedAt;
         $this->price = $price;
         $this->verification = $verification;
+        $this->failure = $failure;
     }
 
     /**
@@ -60,6 +65,7 @@ final class StatusResult
     public static function fromArray(array $data): self
     {
         $verification = $data['verification'] ?? null;
+        $failure = $data['failure'] ?? null;
 
         return new self(
             Scalars::str($data, 'otp_id'),
@@ -70,7 +76,8 @@ final class StatusResult
             Scalars::str($data, 'expires_at'),
             Scalars::str($data, 'verified_at'),
             Scalars::int($data, 'price'),
-            \is_array($verification) ? Verification::fromArray($verification) : null
+            \is_array($verification) ? Verification::fromArray($verification) : null,
+            \is_array($failure) ? DeliveryFailure::fromArray($failure) : null
         );
     }
 }
