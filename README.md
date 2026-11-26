@@ -141,6 +141,13 @@ OTP.ID match their incoming message. Never call `verifyOtp()` for these
 transactions — detect completion via the `otp.verified` webhook or by
 polling `otpStatus()`.
 
+The transaction starts as `waiting` and ends as `verified` or `expired`
+(`expires_at` passed without a match). **You only pay for verified
+transactions:** `$res->price` is what will be charged if the user verifies,
+`$res->lastBalance` is unchanged at request time, and `expired`
+transactions are never charged. With a bound `destination`, a message from
+another number is rejected and the transaction stays `waiting`.
+
 ```php
 $res = $client->requestOtp(['channel' => Channel::WHATSAPP_INBOUND]);
 echo "Ask the user to tap: {$res->verification->waLink}\n";
@@ -148,7 +155,7 @@ echo "Ask the user to tap: {$res->verification->waLink}\n";
 
 `otpStatus()` also carries `verification` (same `waNumber`/`message`/
 `waLink`/`expiresAt` fields) for as long as the transaction stays
-`pending` and has not expired — a page reload while polling does not lose
+`waiting` and has not expired — a page reload while polling does not lose
 the link.
 
 ### Missed Call
