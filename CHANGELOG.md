@@ -14,13 +14,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `$failure` property on `OrderResult` and `StatusResult`, set only when
   `$status === "failed"`. The raw vendor error is never exposed.
 - `StatusResult::$verification` (`otpStatus()` / `GET /v3/otp/{otp_id}`)
-  is now also populated for waiting, not-yet-expired `whatsapp_inbound`
+  is now also populated for pending, not-yet-expired `whatsapp_inbound`
   transactions (previously misscall only), so polling clients keep the
   WhatsApp deep link across page reloads.
 
 ### Changed
 
-- Documented status values: `whatsapp_inbound` now starts as `waiting`
+- Documented status values: `whatsapp_inbound` now starts as `pending`
   (was `pending`) and can end as `expired` (not charged); it is charged
   only when `verified`, so `OrderResult::$price` is the amount due on
   verification and `$lastBalance` is unchanged at request time. Doc-only;

@@ -14,8 +14,8 @@ final class StatusResult
     public string $otpId;
 
     /**
-     * @var string sent | success | failed | pending | waiting | verified | expired. "waiting" (initial) and
-     *             "expired" (expires_at passed without verification; terminal, not charged) apply to
+     * @var string sent | success | failed | pending | verified | expired.
+     *             "expired" (expires_at passed without verification; terminal, not charged) applies to
      *             whatsapp_inbound only; whatsapp_inbound is charged only once "verified".
      */
     public string $status;
@@ -33,7 +33,7 @@ final class StatusResult
 
     public int $price;
 
-    /** @var ?Verification present for not-yet-verified misscall transactions (prefix field) and for waiting, not-yet-expired whatsapp_inbound transactions (wa_number/message/wa_link/expires_at fields), so polling clients can build their UI */
+    /** @var ?Verification present for not-yet-verified misscall transactions (prefix field) and for pending, not-yet-expired whatsapp_inbound transactions (wa_number/message/wa_link/expires_at fields), so polling clients can build their UI */
     public ?Verification $verification;
 
     /** @var ?DeliveryFailure present only when $status is "failed"; the public, classified delivery-failure reason (never the raw vendor error) */
