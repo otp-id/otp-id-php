@@ -15,7 +15,7 @@ final class OrderResult
     public string $otpId;
 
     /**
-     * @var string sent | success | failed | pending | waiting. whatsapp_inbound always starts as "waiting"
+     * @var string sent | success | failed | pending. whatsapp_inbound always starts as "pending"
      *             (not charged until verified); "pending" may appear for some vendor deliveries. An idempotency
      *             replay reflects the current state, so it may also be "verified" or (whatsapp_inbound only) "expired".
      */
