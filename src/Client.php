@@ -15,7 +15,7 @@ use OtpId\Transport\TransportInterface;
 final class Client
 {
     /** Sent in the User-Agent header. */
-    public const VERSION = '0.2.0';
+    public const VERSION = '0.3.0';
 
     private const DEFAULT_BASE_URL = 'https://api.otp.id';
 
