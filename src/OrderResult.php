@@ -14,16 +14,21 @@ final class OrderResult
 {
     public string $otpId;
 
-    /** @var string pending | sent | success | failed */
+    /**
+     * @var string sent | success | failed | pending | waiting. whatsapp_inbound always starts as "waiting"
+     *             (not charged until verified); "pending" may appear for some vendor deliveries. An idempotency
+     *             replay reflects the current state, so it may also be "verified" or (whatsapp_inbound only) "expired".
+     */
     public string $status;
 
     public string $channel;
 
     public string $number;
 
+    /** @var int credit cost of this transaction; for whatsapp_inbound, the amount charged only if the transaction is verified (nothing is deducted at request time) */
     public int $price;
 
-    /** @var int remaining credit after this transaction; stays unchanged when delivery failed (status "failed") or on an idempotency replay */
+    /** @var int remaining credit after this transaction; stays unchanged when delivery failed (status "failed"), on an idempotency replay, and for whatsapp_inbound (charged only when verified) */
     public int $lastBalance;
 
     /** @var string "YYYY-MM-DD HH:MM:SS" in WIB (UTC+7); kept as a string, the SDK does not parse server datetimes */
