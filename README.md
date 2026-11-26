@@ -19,7 +19,8 @@ WhatsApp Inbound) with prepaid billing.
 composer require otp-id/otp-id-php
 ```
 
-Requires PHP >= 7.4.
+Requires PHP >= 7.4. Upgrading from an earlier version? See
+[UPGRADING.md](UPGRADING.md).
 
 ## Quickstart
 

@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-26
+
 ### Added
 
 - `DeliveryFailure` (`code` + `message`) and `FailureCode` constants
@@ -20,11 +22,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- Documented status values: `whatsapp_inbound` now starts as `pending`
-  (was `pending`) and can end as `expired` (not charged); it is charged
-  only when `verified`, so `OrderResult::$price` is the amount due on
-  verification and `$lastBalance` is unchanged at request time. Doc-only;
-  `$status` stays a plain `string`.
+- Billing for `whatsapp_inbound` (server-side change): transactions are now
+  charged only when they become `verified`. They stay `pending` while
+  waiting for the user's WhatsApp message and can end as `expired` (TTL
+  passed, not charged). `OrderResult::$price` is the amount charged on
+  verification, and `$lastBalance` is unchanged at request time. A message
+  from a different number than the destination is rejected and the
+  transaction stays `pending`. Doc-only in the SDK; `$status` stays a plain
+  `string`.
 
 ## [0.2.0] - 2026-08-14
 
